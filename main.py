@@ -17,7 +17,9 @@ class AustralianState(Enum):
     ACT = "act"
     NT = "nt"
 
-
+def current_year():
+    """Returns the current year in YYYY format."""
+    return datetime.now().year
 
 def get_annual_holidays(jurisdiction: AustralianState) -> list:
     """
@@ -32,7 +34,9 @@ def get_annual_holidays(jurisdiction: AustralianState) -> list:
     Raises:
     HTTPError: If there was an error retrieving the holiday data from the API.
     """
-    url = f'https://data.gov.au/data/api/3/action/datastore_search_sql?sql=SELECT%20*%20from%20%22d256f989-8f49-46eb-9770-1c6ee9bd2661%22%20WHERE%20%22Jurisdiction%22%20LIKE%20%27{jurisdiction}%27'
+    thisyear = current_year()
+    url = f"https://data.gov.au/data/api/3/action/datastore_search_sql?sql=SELECT * FROM \"9e920340-0744-4031-a497-98ab796633e8\" WHERE \"Date\" LIKE '{thisyear}%' AND \"Jurisdiction\" = '{jurisdiction}'"
+
     try:
         response = requests.get(url)
         holidays = []
@@ -149,8 +153,9 @@ if __name__ == '__main__':
         exit(1)
     state = args.state.lower()
     hols = get_annual_holidays(state)
-    nbd_lookup_list=generate_annual_nbd_lookuptable(2023, hols)
-    outfolder.mkdir(parents=True, exist_ok=False)
+    thisyear = current_year()
+    nbd_lookup_list=generate_annual_nbd_lookuptable(thisyear, hols)
+    outfolder.mkdir(parents=True, exist_ok=True)
     outfile = outfolder.joinpath(f"{state}_nbd_lookup.xlsx")
     print(f"saving data to {state}_nbd_lookup.xlsx")
     save_dates_to_excel(nbd_lookup_list, outfile)
